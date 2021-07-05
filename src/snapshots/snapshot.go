@@ -1,19 +1,5 @@
 package snapshots
 
-import (
-	"flag"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"time"
-	"strings"
-	"strconv"
-	"path/filepath"
-	"encoding/json"
-	"github.com/bmatcuk/doublestar/v4"
-)
-
 type Snapshot struct {
 	Message       string
 	Time          string

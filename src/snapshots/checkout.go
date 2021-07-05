@@ -1,17 +1,10 @@
 package snapshots
 
 import (
-	"flag"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
-	"time"
-	"strings"
-	"strconv"
 	"path/filepath"
-	"encoding/json"
-	"github.com/bmatcuk/doublestar/v4"
+	"github.com/akbarnes/gover/src/util"
 )
 
 func CheckoutSnaphot(snapshotNum int, outputFolder string) {
@@ -23,7 +16,7 @@ func CheckoutSnaphot(snapshotNum int, outputFolder string) {
 
 	snapshotGlob := filepath.Join(".gover", "snapshots", "*.json")
 	snapshotPaths, err := filepath.Glob(snapshotGlob)
-	check(err)
+	util.Check(err)
 
 	snapshotPath := snapshotPaths[snapshotNum - 1]
 	fmt.Printf("Reading %s\n", snapshotPath)
@@ -44,6 +37,6 @@ func CheckoutSnaphot(snapshotNum int, outputFolder string) {
 		outFile := filepath.Join(outputFolder, file)
 		storedFile := snap.StoredFiles[file]
 		fmt.Printf("Restoring %s to %s\n", storedFile, outFile)
-		CopyFile(storedFile, outFile)
+		util.CopyFile(storedFile, outFile)
 	}
 }

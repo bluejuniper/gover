@@ -1,22 +1,17 @@
 package util
 
 import (
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
-	"time"
-	"strings"
-	"strconv"
-	"path/filepath"
 	"encoding/json"
-	"github.com/bmatcuk/doublestar/v4"
+	"crypto/sha256" 
 )
 
 const NumChars = 40
 
-func check(e error) {
+func Check(e error) {
 	if e != nil {
 		panic(e)
 	}

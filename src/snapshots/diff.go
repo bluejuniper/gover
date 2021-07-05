@@ -1,17 +1,13 @@
 package snapshots
 
 import (
-	"flag"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
-	"time"
 	"strings"
-	"strconv"
 	"path/filepath"
-	"encoding/json"
 	"github.com/bmatcuk/doublestar/v4"
+	"github.com/akbarnes/gover/src/util"
+	"github.com/akbarnes/gover/src/options"
 )
 
 func DiffSnapshot(snapId string, filters []string) {
@@ -30,7 +26,7 @@ func DiffSnapshot(snapId string, filters []string) {
 	}
 
 	// workingDirectory, err := os.Getwd()
-	// check(err)
+	// util.Check(err)
 	workingDirectory := "."
 	head := ReadHead()
 
@@ -46,7 +42,7 @@ func DiffSnapshot(snapId string, filters []string) {
 		matched, err := doublestar.PathMatch(goverDir, fileName)
 
 		if matched {
-			if VerboseMode {
+			if options.VerboseMode {
 				fmt.Printf("Skipping file %s in .gover\n", fileName)
 			}
 
@@ -56,9 +52,9 @@ func DiffSnapshot(snapId string, filters []string) {
 		for _, pattern := range filters {
 			matched, err := doublestar.PathMatch(pattern, fileName)
 
-			check(err)
+			util.Check(err)
 			if matched {
-				if VerboseMode {
+				if options.VerboseMode {
 					fmt.Printf("Skipping file %s which matches with %s\n", fileName, pattern)
 				}
 
@@ -67,7 +63,7 @@ func DiffSnapshot(snapId string, filters []string) {
 		}
 
 		ext := filepath.Ext(fileName)
-		hash, hashErr := HashFile(fileName, NumChars)
+		hash, hashErr := util.HashFile(fileName, util.NumChars)
 
 		if hashErr != nil {
 			return hashErr
@@ -79,7 +75,7 @@ func DiffSnapshot(snapId string, filters []string) {
 		props, err := os.Stat(fileName)
 
 		if err != nil {
-			if VerboseMode {
+			if options.VerboseMode {
 				fmt.Printf("Skipping unreadable file %s\n", fileName)
 			}
 
@@ -112,11 +108,11 @@ func DiffSnapshot(snapId string, filters []string) {
 	// fmt.Printf("No changes detected in %s for commit %s\n", workDir, snapshot.ID)
 	filepath.Walk(workingDirectory, DiffFile)
 
-	if JsonMode {
+	if options.JsonMode {
 
 	} else {
 		for fileName, fileStatus := range status {
-			if fileStatus == "=" && !VerboseMode {
+			if fileStatus == "=" && !options.VerboseMode {
 				continue
 			}
 	

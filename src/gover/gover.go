@@ -7,10 +7,8 @@ import (
 	"strconv"
 	"encoding/json"
 
-	"github.com/bmatcuk/doublestar/v4"
-
 	"github.com/akbarnes/gover/src/snapshots"
-	"github.com/akbarnes/gover/src/util"
+	"github.com/akbarnes/gover/src/options"
 )
 
 func ReadFilters() []string {
@@ -33,16 +31,14 @@ func ReadFilters() []string {
 	return filters
 }
 
-var JsonMode bool
 var Message string
 var OutputFolder string
-var VerboseMode bool
 
 func init() {
-	flag.BoolVar(&JsonMode, "json", false, "print json")
-	flag.BoolVar(&JsonMode, "j", false, "print json")
-	flag.BoolVar(&VerboseMode, "verbose", false, "verbose")
-	flag.BoolVar(&VerboseMode, "v", false, "verbose")	
+	flag.BoolVar(&options.JsonMode, "json", false, "print json")
+	flag.BoolVar(&options.JsonMode, "j", false, "print json")
+	flag.BoolVar(&options.VerboseMode, "verbose", false, "verbose mode")
+	flag.BoolVar(&options.VerboseMode, "v", false, "verbose mode")	
 }
 
 // type Commit struct {
@@ -78,7 +74,7 @@ func main() {
 			Message = commitCmd.Arg(0)
 		}
 
-		CommitSnapshot(Message, filters)
+		snapshots.CommitSnapshot(Message, filters)
 	} else if cmd == "status" || cmd == "st" {
 		statusCmd.Parse(os.Args[2:])
 		filters := ReadFilters()
