@@ -34,31 +34,19 @@ func ReadFilters() []string {
 var Message string
 var OutputFolder string
 
-func init() {
-	flag.BoolVar(&options.JsonMode, "json", false, "print json")
-	flag.BoolVar(&options.JsonMode, "j", false, "print json")
-	flag.BoolVar(&options.VerboseMode, "verbose", false, "verbose mode")
-	flag.BoolVar(&options.VerboseMode, "v", false, "verbose mode")	
+func AddOptionFlags(fs *flag.FlagSet) {
+	fs.BoolVar(&options.JsonMode, "json", false, "print json")
+	fs.BoolVar(&options.JsonMode, "j", false, "print json")
+	fs.BoolVar(&options.VerboseMode, "verbose", false, "verbose mode")
+	fs.BoolVar(&options.VerboseMode, "v", false, "verbose mode")	
 }
-
-// type Commit struct {
-// 	ID        string
-// 	Branch    string
-// 	Message   string
-// 	Time      string
-// 	ParentIDs []string
-// 	Files     []fileInfo
-// 	ChunkIDs  []string
-// }
 
 func main() {
 	commitCmd := flag.NewFlagSet("commit", flag.ExitOnError)
 	statusCmd := flag.NewFlagSet("status", flag.ExitOnError)
 	logCmd := flag.NewFlagSet("log", flag.ExitOnError)
 	checkoutCmd := flag.NewFlagSet("checkout", flag.ExitOnError)
-	
-	flag.Parse()	
-	
+		
 	if len(os.Args) < 2 {
         fmt.Println("Expected subcommand")
         os.Exit(1)
@@ -67,6 +55,7 @@ func main() {
 	cmd := os.Args[1] 
 
 	if cmd == "commit" || cmd == "ci" {
+		AddOptionFlags(commitCmd)
 		commitCmd.Parse(os.Args[2:])
 		filters := ReadFilters()
 
@@ -76,6 +65,7 @@ func main() {
 
 		snapshots.CommitSnapshot(Message, filters)
 	} else if cmd == "status" || cmd == "st" {
+		AddOptionFlags(statusCmd)		
 		statusCmd.Parse(os.Args[2:])
 		filters := ReadFilters()
 
@@ -85,6 +75,7 @@ func main() {
 			snapshots.DiffSnapshot("", filters)
 		}		
 	} else if cmd == "log" {
+		AddOptionFlags(logCmd)
 		logCmd.Parse(os.Args[2:])
 
 		if logCmd.NArg() >= 1 {
@@ -94,6 +85,7 @@ func main() {
 			snapshots.LogAllSnapshots()
 		}
 	} else if cmd == "checkout" || cmd == "co" {
+		AddOptionFlags(checkoutCmd)
 		checkoutCmd.StringVar(&OutputFolder, "out", "", "output folder")
 		checkoutCmd.StringVar(&OutputFolder, "o", "", "output folder")	
 		checkoutCmd.Parse(os.Args[2:])

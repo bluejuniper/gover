@@ -57,13 +57,14 @@ func LogSingleSnapshot(snapshotNum int) {
 	if options.JsonMode {
 		type SnapshotFile struct {
 			File string
+			ModTime string
 			StoredFile string
 		}
 
 		snapFiles := []SnapshotFile{}
 
 		for _, file := range snap.Files {
-			snapFile := SnapshotFile{File: file, StoredFile:snap.StoredFiles[file]}
+			snapFile := SnapshotFile{File: file, ModTime: snap.ModTimes[file], StoredFile:snap.StoredFiles[file]}
 			snapFiles = append(snapFiles, snapFile)
 		}
 
