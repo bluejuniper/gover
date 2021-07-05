@@ -504,29 +504,14 @@ func ReadFilters() []string {
 	return filters
 }
 
-var LogCommand bool
-var CheckoutCommand bool
-var StatusCommand bool
 var JsonMode bool
 var Message string
-var CommitCommand bool
 var OutputFolder string
 var VerboseMode bool
 
 func init() {
-	flag.BoolVar(&LogCommand, "log", false, "list snapshots")
-	flag.BoolVar(&CommitCommand, "commit", false, "commit snapshot")
-	flag.BoolVar(&CommitCommand, "ci", false, "commit snapshot")	
-	flag.BoolVar(&StatusCommand, "status", false, "working directory status")
-	flag.BoolVar(&StatusCommand, "st", false, "working directory status")		
-	flag.BoolVar(&CheckoutCommand, "checkout", false,"checkout snapshot")
-	flag.BoolVar(&CheckoutCommand, "co", false,"checkout snapshot")
 	flag.BoolVar(&JsonMode, "json", false, "print json")
 	flag.BoolVar(&JsonMode, "j", false, "print json")
-	flag.StringVar(&Message, "msg", "", "commit message")
-	flag.StringVar(&Message, "m", "", "commit message")
-	flag.StringVar(&OutputFolder, "out", "", "output folder")
-	flag.StringVar(&OutputFolder, "o", "", "output folder")	
 	flag.BoolVar(&VerboseMode, "verbose", false, "verbose")
 	flag.BoolVar(&VerboseMode, "v", false, "verbose")	
 }
@@ -542,34 +527,56 @@ func init() {
 // }
 
 func main() {
-	flag.Parse()
+	commitCmd := flag.NewFlagSet("commit", flag.ExitOnError)
+	statusCmd := flag.NewFlagSet("status", flag.ExitOnError)
+	logCmd := flag.NewFlagSet("log", flag.ExitOnError)
+	checkoutCmd := flag.NewFlagSet("checkout", flag.ExitOnError)
+	
+	flag.Parse()	
+	
+	if len(os.Args) < 2 {
+        fmt.Println("Expected subcommand")
+        os.Exit(1)
+	}
+	
+	cmd := os.Args[1] 
 
-	if LogCommand {
-		if flag.NArg() >= 1 {
-			snapshotNum, _ := strconv.Atoi(flag.Arg(0))
+	if cmd == "commit" || cmd == "ci" {
+		commitCmd.Parse(os.Args[2:])
+		filters := ReadFilters()
+
+		if commitCmd.NArg() >= 1 {
+			Message = commitCmd.Arg(0)
+		}
+
+		CommitSnapshot(Message, filters)
+	} else if cmd == "status" || cmd == "st" {
+		statusCmd.Parse(os.Args[2:])
+		filters := ReadFilters()
+
+		if statusCmd.NArg() >= 1 {
+			DiffSnapshot(statusCmd.Arg(0), filters)
+		} else {
+			DiffSnapshot("", filters)
+		}		
+	} else if cmd == "log" {
+		logCmd.Parse(os.Args[2:])
+
+		if logCmd.NArg() >= 1 {
+			snapshotNum, _ := strconv.Atoi(logCmd.Arg(0))
 			LogSingleSnapshot(snapshotNum)
 		} else {
 			LogAllSnapshots()
 		}
-	} else if CheckoutCommand {
-		snapshotNum, _ := strconv.Atoi(flag.Arg(0))
+	} else if cmd == "checkout" || cmd == "co" {
+		checkoutCmd.StringVar(&OutputFolder, "out", "", "output folder")
+		checkoutCmd.StringVar(&OutputFolder, "o", "", "output folder")	
+		checkoutCmd.Parse(os.Args[2:])
+		snapshotNum, _ := strconv.Atoi(checkoutCmd.Arg(0))
 		CheckoutSnaphot(snapshotNum, OutputFolder)
-	} else if StatusCommand {
-		filters := ReadFilters()
-
-		if flag.NArg() >= 1 {
-			DiffSnapshot(flag.Arg(0), filters)
-		} else {
-			DiffSnapshot("", filters)
-		}		
 	} else {
-		filters := ReadFilters()
-
-		if len(Message) == 0 && flag.NArg() >= 1 {
-			Message = flag.Arg(0)
-		}
-
-		CommitSnapshot(Message, filters)
+        fmt.Println("Unknown subcommand")
+        os.Exit(1)
 	}
 }
 
