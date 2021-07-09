@@ -57,6 +57,7 @@ func main() {
 	cmd := os.Args[1]
 
 	if cmd == "commit" || cmd == "ci" {
+		AddOptionFlags(commitCmd)
 		commitCmd.Parse(os.Args[2:])
 		filters := ReadFilters()
 
@@ -66,6 +67,7 @@ func main() {
 
 		snapshots.CommitSnapshot(Message, filters)
 	} else if cmd == "status" || cmd == "st" {
+		AddOptionFlags(statusCmd)		
 		statusCmd.Parse(os.Args[2:])
 		filters := ReadFilters()
 
@@ -73,8 +75,9 @@ func main() {
 			snapshots.DiffSnapshot(statusCmd.Arg(0), filters)
 		} else {
 			snapshots.DiffSnapshot("", filters)
-		}
+		}		
 	} else if cmd == "log" {
+		AddOptionFlags(logCmd)
 		logCmd.Parse(os.Args[2:])
 
 		if logCmd.NArg() >= 1 {
@@ -84,8 +87,9 @@ func main() {
 			snapshots.LogAllSnapshots()
 		}
 	} else if cmd == "checkout" || cmd == "co" {
+		AddOptionFlags(checkoutCmd)
 		checkoutCmd.StringVar(&OutputFolder, "out", "", "output folder")
-		checkoutCmd.StringVar(&OutputFolder, "o", "", "output folder")
+		checkoutCmd.StringVar(&OutputFolder, "o", "", "output folder")	
 		checkoutCmd.Parse(os.Args[2:])
 		snapshotNum, _ := strconv.Atoi(checkoutCmd.Arg(0))
 		snapshots.CheckoutSnaphot(snapshotNum, OutputFolder)

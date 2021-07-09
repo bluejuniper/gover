@@ -109,7 +109,25 @@ func DiffSnapshot(snapId string, filters []string) {
 	filepath.Walk(workingDirectory, DiffFile)
 
 	if options.JsonMode {
+		type FileStatus struct {
+			File string
+			Status string
+		}
 
+		statuses := []FileStatus{}
+		statusDesc := make(map[string]string)
+
+		statusDesc["="] = "Same"
+		statusDesc["+"] = "New"
+		statusDesc["M"] = "Modified"
+		statusDesc["-"] = "Deleted"
+
+		for fileName, fileStatus := range status {
+			fs := FileStatus{File: fileName, Status: statusDesc[fileStatus]}
+			statuses = append(statuses, fs)
+		}
+
+		util.PrintJson(statuses)
 	} else {
 		for fileName, fileStatus := range status {
 			if fileStatus == "=" && !options.VerboseMode {
