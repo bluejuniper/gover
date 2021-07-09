@@ -1,14 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"strconv"
-	"encoding/json"
 
-	"github.com/akbarnes/gover/src/snapshots"
 	"github.com/akbarnes/gover/src/options"
+	"github.com/akbarnes/gover/src/snapshots"
 )
 
 func ReadFilters() []string {
@@ -38,33 +38,23 @@ func init() {
 	flag.BoolVar(&options.JsonMode, "json", false, "print json")
 	flag.BoolVar(&options.JsonMode, "j", false, "print json")
 	flag.BoolVar(&options.VerboseMode, "verbose", false, "verbose mode")
-	flag.BoolVar(&options.VerboseMode, "v", false, "verbose mode")	
+	flag.BoolVar(&options.VerboseMode, "v", false, "verbose mode")
 }
-
-// type Commit struct {
-// 	ID        string
-// 	Branch    string
-// 	Message   string
-// 	Time      string
-// 	ParentIDs []string
-// 	Files     []fileInfo
-// 	ChunkIDs  []string
-// }
 
 func main() {
 	commitCmd := flag.NewFlagSet("commit", flag.ExitOnError)
 	statusCmd := flag.NewFlagSet("status", flag.ExitOnError)
 	logCmd := flag.NewFlagSet("log", flag.ExitOnError)
 	checkoutCmd := flag.NewFlagSet("checkout", flag.ExitOnError)
-	
-	flag.Parse()	
-	
+
+	flag.Parse()
+
 	if len(os.Args) < 2 {
-        fmt.Println("Expected subcommand")
-        os.Exit(1)
+		fmt.Println("Expected subcommand")
+		os.Exit(1)
 	}
-	
-	cmd := os.Args[1] 
+
+	cmd := os.Args[1]
 
 	if cmd == "commit" || cmd == "ci" {
 		commitCmd.Parse(os.Args[2:])
@@ -83,7 +73,7 @@ func main() {
 			snapshots.DiffSnapshot(statusCmd.Arg(0), filters)
 		} else {
 			snapshots.DiffSnapshot("", filters)
-		}		
+		}
 	} else if cmd == "log" {
 		logCmd.Parse(os.Args[2:])
 
@@ -95,13 +85,12 @@ func main() {
 		}
 	} else if cmd == "checkout" || cmd == "co" {
 		checkoutCmd.StringVar(&OutputFolder, "out", "", "output folder")
-		checkoutCmd.StringVar(&OutputFolder, "o", "", "output folder")	
+		checkoutCmd.StringVar(&OutputFolder, "o", "", "output folder")
 		checkoutCmd.Parse(os.Args[2:])
 		snapshotNum, _ := strconv.Atoi(checkoutCmd.Arg(0))
 		snapshots.CheckoutSnaphot(snapshotNum, OutputFolder)
 	} else {
-        fmt.Println("Unknown subcommand")
-        os.Exit(1)
+		fmt.Println("Unknown subcommand")
+		os.Exit(1)
 	}
 }
-

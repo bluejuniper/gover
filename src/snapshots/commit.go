@@ -3,12 +3,13 @@ package snapshots
 import (
 	"fmt"
 	"os"
-	"time"
-	"strings"
 	"path/filepath"
-	"github.com/bmatcuk/doublestar/v4"
+	"strings"
+	"time"
+
+	"github.com/akbarnes/gover/src/options"
 	"github.com/akbarnes/gover/src/util"
-	"github.com/akbarnes/gover/src/options"	
+	"github.com/bmatcuk/doublestar/v4"
 )
 
 func CommitSnapshot(message string, filters []string) {
@@ -65,8 +66,8 @@ func CommitSnapshot(message string, filters []string) {
 			return hashErr
 		}
 
-		verFolder := filepath.Join(".gover", "data", hash[0:2]) 
-		verFile := filepath.Join(verFolder, hash + ext)
+		verFolder := filepath.Join(".gover", "data", hash[0:2])
+		verFile := filepath.Join(verFolder, hash+ext)
 
 		props, err := os.Stat(fileName)
 
@@ -79,8 +80,6 @@ func CommitSnapshot(message string, filters []string) {
 		}
 
 		modTime := props.ModTime().Format("2006-01-02T15-04-05")
-
-
 
 		snap.Files = append(snap.Files, fileName)
 		snap.StoredFiles[fileName] = verFile
@@ -95,12 +94,10 @@ func CommitSnapshot(message string, filters []string) {
 		} else {
 			util.CopyFile(fileName, verFile)
 
-			if !options.JsonMode {
-				if options.VerboseMode {
-						fmt.Printf("%s -> %s\n", fileName, verFile)
-				} else {
-					fmt.Println(fileName)
-				}
+			if options.VerboseMode {
+				fmt.Printf("%s -> %s\n", fileName, verFile)
+			} else {
+				fmt.Println(fileName)
 			}
 		}
 
@@ -116,7 +113,7 @@ func CommitSnapshot(message string, filters []string) {
 
 	snapFolder := filepath.Join(".gover", "snapshots")
 	os.MkdirAll(snapFolder, 0777)
-	snapFile := filepath.Join(snapFolder, ts + ".json")
+	snapFile := filepath.Join(snapFolder, ts+".json")
 	snap.Write(snapFile)
 	WriteHead(ts)
 }
