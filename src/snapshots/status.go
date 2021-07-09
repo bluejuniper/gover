@@ -3,11 +3,12 @@ package snapshots
 import (
 	"fmt"
 	"os"
-	"strings"
 	"path/filepath"
-	"github.com/bmatcuk/doublestar/v4"
-	"github.com/akbarnes/gover/src/util"
+	"strings"
+
 	"github.com/akbarnes/gover/src/options"
+	"github.com/akbarnes/gover/src/util"
+	"github.com/bmatcuk/doublestar/v4"
 )
 
 func DiffSnapshot(snapId string, filters []string) {
@@ -69,8 +70,8 @@ func DiffSnapshot(snapId string, filters []string) {
 			return hashErr
 		}
 
-		verFolder := filepath.Join(".gover", "data", hash[0:2]) 
-		verFile := filepath.Join(verFolder, hash + ext)
+		verFolder := filepath.Join(".gover", "data", hash[0:2])
+		verFile := filepath.Join(verFolder, hash+ext)
 
 		props, err := os.Stat(fileName)
 
@@ -84,8 +85,6 @@ func DiffSnapshot(snapId string, filters []string) {
 
 		modTime := props.ModTime().Format("2006-01-02T15-04-05")
 
-
-
 		snap.Files = append(snap.Files, fileName)
 		snap.StoredFiles[fileName] = verFile
 		snap.ModTimes[fileName] = modTime
@@ -94,7 +93,7 @@ func DiffSnapshot(snapId string, filters []string) {
 
 		if headModTime, ok := head.ModTimes[fileName]; ok {
 			if modTime == headModTime {
-					status[fileName] = "="
+				status[fileName] = "="
 			} else {
 				status[fileName] = "M"
 			}
@@ -108,33 +107,11 @@ func DiffSnapshot(snapId string, filters []string) {
 	// fmt.Printf("No changes detected in %s for commit %s\n", workDir, snapshot.ID)
 	filepath.Walk(workingDirectory, DiffFile)
 
-	if options.JsonMode {
-		type FileStatus struct {
-			File string
-			Status string
+	for fileName, fileStatus := range status {
+		if fileStatus == "=" && !options.VerboseMode {
+			continue
 		}
 
-		statuses := []FileStatus{}
-		statusDesc := make(map[string]string)
-
-		statusDesc["="] = "Same"
-		statusDesc["+"] = "New"
-		statusDesc["M"] = "Modified"
-		statusDesc["-"] = "Deleted"
-
-		for fileName, fileStatus := range status {
-			fs := FileStatus{File: fileName, Status: statusDesc[fileStatus]}
-			statuses = append(statuses, fs)
-		}
-
-		util.PrintJson(statuses)
-	} else {
-		for fileName, fileStatus := range status {
-			if fileStatus == "=" && !options.VerboseMode {
-				continue
-			}
-	
-			fmt.Printf("%s %s\n", fileStatus, fileName)
-		}
+		fmt.Printf("%s %s\n", fileStatus, fileName)
 	}
 }

@@ -34,11 +34,9 @@ func ReadFilters() []string {
 var Message string
 var OutputFolder string
 
-func init() {
-	flag.BoolVar(&options.JsonMode, "json", false, "print json")
-	flag.BoolVar(&options.JsonMode, "j", false, "print json")
-	flag.BoolVar(&options.VerboseMode, "verbose", false, "verbose mode")
-	flag.BoolVar(&options.VerboseMode, "v", false, "verbose mode")
+func AddOptionFlags(fs *flag.FlagSet) {
+	fs.BoolVar(&options.VerboseMode, "verbose", false, "verbose mode")
+	fs.BoolVar(&options.VerboseMode, "v", false, "verbose mode")
 }
 
 func main() {
@@ -67,7 +65,7 @@ func main() {
 
 		snapshots.CommitSnapshot(Message, filters)
 	} else if cmd == "status" || cmd == "st" {
-		AddOptionFlags(statusCmd)		
+		AddOptionFlags(statusCmd)
 		statusCmd.Parse(os.Args[2:])
 		filters := ReadFilters()
 
@@ -75,7 +73,7 @@ func main() {
 			snapshots.DiffSnapshot(statusCmd.Arg(0), filters)
 		} else {
 			snapshots.DiffSnapshot("", filters)
-		}		
+		}
 	} else if cmd == "log" {
 		AddOptionFlags(logCmd)
 		logCmd.Parse(os.Args[2:])
@@ -89,7 +87,7 @@ func main() {
 	} else if cmd == "checkout" || cmd == "co" {
 		AddOptionFlags(checkoutCmd)
 		checkoutCmd.StringVar(&OutputFolder, "out", "", "output folder")
-		checkoutCmd.StringVar(&OutputFolder, "o", "", "output folder")	
+		checkoutCmd.StringVar(&OutputFolder, "o", "", "output folder")
 		checkoutCmd.Parse(os.Args[2:])
 		snapshotNum, _ := strconv.Atoi(checkoutCmd.Arg(0))
 		snapshots.CheckoutSnaphot(snapshotNum, OutputFolder)

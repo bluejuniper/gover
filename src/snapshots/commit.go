@@ -107,10 +107,6 @@ func CommitSnapshot(message string, filters []string) {
 	// fmt.Printf("No changes detected in %s for commit %s\n", workDir, snapshot.ID)
 	filepath.Walk(workingDirectory, VersionFile)
 
-	if options.JsonMode {
-		util.PrintJson(snap)
-	}
-
 	snapFolder := filepath.Join(".gover", "snapshots")
 	os.MkdirAll(snapFolder, 0777)
 	snapFile := filepath.Join(snapFolder, ts+".json")

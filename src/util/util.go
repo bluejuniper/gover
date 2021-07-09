@@ -1,12 +1,11 @@
 package util
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
-	"encoding/json"
-	"crypto/sha256" 
 )
 
 const NumChars = 40
@@ -56,11 +55,4 @@ func CopyFile(src, dst string) error {
 		return err
 	}
 	return out.Close()
-}
-
-// Print an object as JSON to stdout
-func PrintJson(a interface{}) {
-	myEncoder := json.NewEncoder(os.Stdout)
-	myEncoder.SetIndent("", "  ")
-	myEncoder.Encode(a)
 }
