@@ -2,6 +2,7 @@ package snapshots
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/akbarnes/gover/src/options"
 	"github.com/akbarnes/gover/src/util"
 	"github.com/bmatcuk/doublestar/v4"
+	"github.com/restic/chunker"
 )
 
 func CommitSnapshot(message string, filters []string) {
@@ -112,4 +114,136 @@ func CommitSnapshot(message string, filters []string) {
 	snapFile := filepath.Join(snapFolder, ts+".json")
 	snap.Write(snapFile)
 	WriteHead(ts)
+}
+
+func CommitChunkedSnapshot(message string, filters []string, mypoly chunker.Pol, compressionLevel uint16, maxPackBytes int64) error {
+	t := time.Now()
+	ts := t.Format("2006-01-02T15-04-05")
+	snap := Snapshot{Time: ts}
+	snap.Files = []string{}
+	snap.StoredFiles = make(map[string]string)
+	snap.ModTimes = make(map[string]string)
+	snap.Message = message
+	snap.PackIds = make(map[string][]string)
+	snap.ChunkIds = make(map[string][]string)
+
+	if err := os.MkdirAll(archiveFolder, 0777); err != nil {
+		if VerboseMode {
+			fmt.Printf("Error creating archive folder %s\n", archiveFolder)
+		}
+
+		return err
+	}
+
+	packCount := 1
+	packPath := filepath.Join(archiveFolder, fmt.Sprintf("pack%d.dat", packCount))
+	packFile, err := os.Create(packPath)
+	var packOffset int64 = 0
+	var packBytesRemaining int64 = maxPackBytes
+
+	if err != nil {
+		if VerboseMode {
+			fmt.Printf("Error creating pack file %s\n", packPath)
+		}
+
+		return err
+	}
+
+	workingDirectory := "."
+	head := ReadHead()
+
+	goverDir := filepath.Join(workingDirectory, ".gover", "**")
+
+	var VersionFile = func(fileName string, info os.FileInfo, err error) error {
+		fileName = strings.TrimSuffix(fileName, "\n")
+
+		if info.IsDir() {
+			return nil
+		}
+
+		props, err := os.Stat(fileName)
+
+		if err != nil {
+			if VerboseMode {
+				fmt.Printf("Can't stat file %s, skipping\n", fileName)
+			}
+
+			return err
+		}
+
+		in, err := os.Open(fileName)
+
+		if err != nil {
+			if VerboseMode {
+				fmt.Printf("Can't open file %s for reading, skipping\n", fileName)
+			}
+
+			return err
+		}
+
+		defer in.Close()
+
+		if VerboseMode {
+			fmt.Printf("Storing %s\n", fileName)
+		} else {
+			fmt.Println(fileName)
+		}
+
+		fileBytesRemaining := props.Size()
+
+		snap.Files = append(snap.Files, fileName)
+		snap.PackNumbers[fileName] = []int{}
+		snap.Offsets[fileName] = []int64{}
+		snap.Lengths[fileName] = []int64{}
+
+		for fileBytesRemaining > 0 {
+			copyBytes := min64(packBytesRemaining, fileBytesRemaining)
+			bytesCopied, err := io.CopyN(packFile, in, copyBytes)
+
+			if err == nil {
+				fileBytesRemaining -= bytesCopied
+				packBytesRemaining -= bytesCopied
+				snap.PackNumbers[fileName] = append(snap.PackNumbers[fileName], packCount)
+				snap.Offsets[fileName] = append(snap.Offsets[fileName], packOffset)
+				snap.Lengths[fileName] = append(snap.Lengths[fileName], bytesCopied)
+				packOffset += bytesCopied
+			} else {
+				if VerboseMode {
+					fmt.Printf("Error writing file %s to pack %s, aborting\n", fileName, packPath)
+				}
+
+				return err
+			}
+
+			if packBytesRemaining <= 0 {
+				packFile.Close()
+				packCount++
+				packOffset = 0
+				packBytesRemaining = maxPackBytes
+				packPath = filepath.Join(archiveFolder, fmt.Sprintf("pack%d.dat", packCount))
+				var err error
+				packFile, err = os.Create(packPath)
+
+				if err != nil {
+					if VerboseMode {
+						fmt.Printf("Error creating pack file %s\n", packPath)
+					}
+
+					return err
+				}
+
+				if VerboseMode {
+					fmt.Printf("Creating new pack file %s\n", packPath)
+				}
+			}
+		}
+
+		return nil
+	}
+
+	// fmt.Printf("No changes detected in %s for commit %s\n", workDir, snapshot.ID)
+	filepath.Walk(workingDirectory, VersionFile)
+	packFile.Close()
+	snap.Write(archiveFolder)
+	return nil
 }
