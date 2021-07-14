@@ -1,4 +1,4 @@
-package gover
+package snapshots
 
 import (
 	"encoding/json"
@@ -20,7 +20,7 @@ func (snap Snapshot) Write(snapshotPath string) {
 }
 
 func ReadSnapshot(snapId string) Snapshot {
-	snapshotPath := filepath.Join(".gover2", "snapshots", snapId+".json")
+	snapshotPath := filepath.Join(".gover", "snapshots", snapId+".json")
 
 	if VerboseMode {
 		fmt.Printf("Reading %s\n", snapshotPath)
@@ -31,35 +31,27 @@ func ReadSnapshot(snapId string) Snapshot {
 
 // Read a snapshot given a file path
 func ReadSnapshotFile(snapshotPath string) Snapshot {
-	var snap Snapshot
+	var mySnapshot Snapshot
 	f, err := os.Open(snapshotPath)
-
-	// ChunkPackIds map[string]string
-	// FileChunkIds map[string][]string
-	// FileModTimes map[string]string
 
 	if err != nil {
 		// panic(fmt.Sprintf("Error: Could not read snapshot file %s", snapshotPath))
-		snap := Snapshot{}
-		snap.ChunkPackIds = make(map[string]string)
-		snap.FileChunkIds = make(map[string][]string)
-		snap.FileModTimes = make(map[string]string)
-		return snap
+		return Snapshot{Files: []string{}, StoredFiles: make(map[string]string), ModTimes: make(map[string]string)}
 	}
 
 	myDecoder := json.NewDecoder(f)
 
-	if err := myDecoder.Decode(&snap); err != nil {
+	if err := myDecoder.Decode(&mySnapshot); err != nil {
 		fmt.Printf("Error:could not decode head file %s\n", snapshotPath)
 		Check(err)
 	}
 
 	f.Close()
-	return snap
+	return mySnapshot
 }
 
 func WriteHead(snapshotPath string) {
-	headPath := filepath.Join(".gover2", "head.json")
+	headPath := filepath.Join(".gover", "head.json")
 	f, err := os.Create(headPath)
 
 	if err != nil {
@@ -74,16 +66,12 @@ func WriteHead(snapshotPath string) {
 
 // Read a snapshot given a file path
 func ReadHead() Snapshot {
-	headPath := filepath.Join(".gover2", "head.json")
+	headPath := filepath.Join(".gover", "head.json")
 	f, err := os.Open(headPath)
 
 	if err != nil {
 		// panic(fmt.Sprintf("Error: Could not read snapshot file %s", snapshotPath))
-		snap := Snapshot{}
-		snap.ChunkPackIds = make(map[string]string)
-		snap.FileChunkIds = make(map[string][]string)
-		snap.FileModTimes = make(map[string]string)
-		return snap
+		return Snapshot{Files: []string{}, StoredFiles: make(map[string]string), ModTimes: make(map[string]string)}
 	}
 
 	snapshotId := ""
@@ -96,6 +84,6 @@ func ReadHead() Snapshot {
 
 	f.Close()
 
-	snapshotPath := filepath.Join(".gover2", "snapshots", snapshotId+".json")
+	snapshotPath := filepath.Join(".gover", "snapshots", snapshotId+".json")
 	return ReadSnapshotFile(snapshotPath)
 }

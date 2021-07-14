@@ -1,4 +1,4 @@
-package snapshots
+package gover
 
 const PACK_ID_LEN int = 64
 
