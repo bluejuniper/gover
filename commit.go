@@ -50,6 +50,7 @@ func CommitSnapshot(message string, filters []string, poly chunker.Pol, compress
 		fmt.Printf("Creating pack number: %3d, ID: %s\n", packCount, packId[0:16])
 	}
 
+	// TODO: only create pack file if we need to save stuff - set to nil initially
 	packFile, err := os.Create(packPath)
 
 	if err != nil {
@@ -196,14 +197,33 @@ func CommitSnapshot(message string, filters []string, poly chunker.Pol, compress
 					return err
 				}
 
-				writer.Write(chunk.Data)
+				if _, err := writer.Write(chunk.Data); err != nil {
+					if VerboseMode {
+						fmt.Printf("Error writing chunk %s of file %s\n", chunkId, fileName)
+					}
+
+					return err
+				}
+
 				snap.ChunkPackIds[chunkId] = packId
 				packBytesRemaining -= int64(chunk.Length)
 			}
 
 			if packBytesRemaining <= 0 {
-				zipWriter.Close()
-				packFile.Close()
+				if err := zipWriter.Close(); err != nil {
+					if VerboseMode {
+						fmt.Printf("Error closing zipwriter for pack %s\n", packPath)
+						return err
+					}
+				}
+
+				if err := packFile.Close(); err != nil {
+					if VerboseMode {
+						fmt.Printf("Error closing file for pack %s\n", packPath)
+						return err
+					}
+				}
+
 				packId := RandHexString(PACK_ID_LEN)
 				packFolderPath := path.Join(goverDir, "packs", packId[0:2])
 				os.MkdirAll(packFolderPath, 0777)
@@ -245,8 +265,19 @@ func CommitSnapshot(message string, filters []string, poly chunker.Pol, compress
 		fmt.Println(err)
 	}
 
-	zipWriter.Close()
-	packFile.Close()
+	if err := zipWriter.Close(); err != nil {
+		if VerboseMode {
+			fmt.Printf("Error closing zipwriter for pack %s\n", packPath)
+			return err
+		}
+	}
+
+	if err := packFile.Close(); err != nil {
+		if VerboseMode {
+			fmt.Printf("Error closing file for pack %s\n", packPath)
+			return err
+		}
+	}
 
 	snapFolder := filepath.Join(".gover2", "snapshots")
 	os.MkdirAll(snapFolder, 0777)
