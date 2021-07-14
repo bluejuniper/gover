@@ -168,7 +168,7 @@ func CommitSnapshot(message string, filters []string, poly chunker.Pol, compress
 			}
 
 			chunkId := fmt.Sprintf("%064x", sha256.Sum256(chunk.Data))
-			snap.FileChunkIds = append(snap.FileChunkIds, chunkId)
+			snap.FileChunkIds[fileName] = append(snap.FileChunkIds[fileName], chunkId)
 
 			if _, ok := snap.ChunkPackIds[chunkId]; ok {
 				if VerboseMode {
