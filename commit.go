@@ -202,8 +202,8 @@ func CommitSnapshot(message string, filters []string, poly chunker.Pol, compress
 			}
 
 			if packBytesRemaining <= 0 {
-				packFile.Close()
 				zipWriter.Close()
+				packFile.Close()
 				packId := RandHexString(PACK_ID_LEN)
 				packFolderPath := path.Join(goverDir, "packs", packId[0:2])
 				os.MkdirAll(packFolderPath, 0777)
@@ -245,6 +245,7 @@ func CommitSnapshot(message string, filters []string, poly chunker.Pol, compress
 		fmt.Println(err)
 	}
 
+	zipWriter.Close()
 	packFile.Close()
 
 	snapFolder := filepath.Join(".gover2", "snapshots")
