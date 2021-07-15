@@ -15,13 +15,15 @@ const HexChars = "0123456789abcdef"
 var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func ExcludedFile(fileName string, info os.FileInfo, filters []string) bool {
-	goverDir := filepath.Join(WorkingDirectory, ".gover2")
+	// goverDir := filepath.Join(WorkingDirectory, ".gover2")
+	goverDir := ".gover2"
+	goverPattern := filepath.Join(goverDir, "**")
 
 	if info.IsDir() {
 		return true
 	}
 
-	matched, err := doublestar.PathMatch(goverDir, fileName)
+	matched, err := doublestar.PathMatch(goverPattern, fileName)
 
 	if err != nil && VerboseMode {
 		fmt.Printf("Error matching %s\n", goverDir)
@@ -29,7 +31,7 @@ func ExcludedFile(fileName string, info os.FileInfo, filters []string) bool {
 
 	if matched {
 		if VerboseMode {
-			fmt.Printf("Skipping file %s in .gover\n", fileName)
+			fmt.Printf("Skipping file %s in .gover2\n", fileName)
 		}
 
 		return true

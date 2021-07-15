@@ -6,7 +6,7 @@ import (
 )
 
 func LogAllSnapshots() {
-	snapshotGlob := filepath.Join(".gover", "snapshots", "*.json")
+	snapshotGlob := filepath.Join(".gover2", "snapshots", "*.json")
 	snapshotPaths, err := filepath.Glob(snapshotGlob)
 	Check(err)
 
@@ -23,14 +23,14 @@ func LogAllSnapshots() {
 }
 
 func LogSingleSnapshot(snapshotNum int) {
-	snapshotGlob := filepath.Join(".gover", "snapshots", "*.json")
+	snapshotGlob := filepath.Join(".gover2", "snapshots", "*.json")
 	snapshotPaths, err := filepath.Glob(snapshotGlob)
 	Check(err)
 
 	snapshotPath := snapshotPaths[snapshotNum-1]
 	snap := ReadSnapshotFile(snapshotPath)
 
-	for _, file := range snap.Files {
+	for file, _ := range snap.FileModTimes {
 		fmt.Println(file)
 	}
 }

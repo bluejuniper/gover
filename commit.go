@@ -69,7 +69,7 @@ func CommitSnapshot(message string, filters []string, poly chunker.Pol, maxPackB
 				fmt.Printf("Can't open file %s for reading, skipping\n", fileName)
 			}
 
-			return err
+			return nil
 		}
 
 		defer in.Close()

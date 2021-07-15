@@ -1,11 +1,12 @@
 package main
 
 import (
-	"encoding/json"
+	"bufio"
 	"flag"
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 
 	"github.com/akbarnes/gover"
 	"github.com/restic/chunker"
@@ -14,20 +15,17 @@ import (
 func ReadFilters() []string {
 	filterPath := ".gover2_ignore.json"
 	var filters []string
-	f, err := os.Open(filterPath)
+	f, _ := os.Open(filterPath)
+	scanner := bufio.NewScanner(f)
 
-	if err != nil {
-		// panic(fmt.Sprintf("Error: Could not read snapshot file %s", snapshotPath))
-		return []string{}
+	for scanner.Scan() {
+		filters = append(filters, scanner.Text())
 	}
 
-	myDecoder := json.NewDecoder(f)
-
-	if err := myDecoder.Decode(&filters); err != nil {
-		panic(fmt.Sprintf("Error:could not decode filter file %s", filterPath))
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
 
-	f.Close()
 	return filters
 }
 
@@ -41,8 +39,8 @@ func AddOptionFlags(fs *flag.FlagSet) {
 
 func main() {
 	commitCmd := flag.NewFlagSet("commit", flag.ExitOnError)
-	// statusCmd := flag.NewFlagSet("status", flag.ExitOnError)
-	// logCmd := flag.NewFlagSet("log", flag.ExitOnError)
+	statusCmd := flag.NewFlagSet("status", flag.ExitOnError)
+	logCmd := flag.NewFlagSet("log", flag.ExitOnError)
 	// checkoutCmd := flag.NewFlagSet("checkout", flag.ExitOnError)
 
 	flag.Parse()
@@ -75,26 +73,26 @@ func main() {
 
 		const packSize int64 = 10 * 1024 * 1024
 		gover.CommitSnapshot(Message, filters, p, packSize)
-		// } else if cmd == "status" || cmd == "st"
-		// 	AddOptionFlags(statusCmd)
-		// 	statusCmd.Parse(os.Args[2:])
-		// 	filters := ReadFilters()
+	} else if cmd == "status" || cmd == "st" {
+		AddOptionFlags(statusCmd)
+		statusCmd.Parse(os.Args[2:])
+		filters := ReadFilters()
 
-		// 	if statusCmd.NArg() >= 1 {
-		// 		gover.DiffSnapshot(statusCmd.Arg(0), filters)
-		// 	} else {
-		// 		gover.DiffSnapshot("", filters)
-		// 	}
-		// } else if cmd == "log" {
-		// 	AddOptionFlags(logCmd)
-		// 	logCmd.Parse(os.Args[2:])
+		if statusCmd.NArg() >= 1 {
+			gover.DiffSnapshot(statusCmd.Arg(0), filters)
+		} else {
+			gover.DiffSnapshot("", filters)
+		}
+	} else if cmd == "log" {
+		AddOptionFlags(logCmd)
+		logCmd.Parse(os.Args[2:])
 
-		// 	if logCmd.NArg() >= 1 {
-		// 		snapshotNum, _ := strconv.Atoi(logCmd.Arg(0))
-		// 		gover.LogSingleSnapshot(snapshotNum)
-		// 	} else {
-		// 		gover.LogAllSnapshots()
-		// 	}
+		if logCmd.NArg() >= 1 {
+			snapshotNum, _ := strconv.Atoi(logCmd.Arg(0))
+			gover.LogSingleSnapshot(snapshotNum)
+		} else {
+			gover.LogAllSnapshots()
+		}
 		// } else if cmd == "checkout" || cmd == "co" {
 		// 	AddOptionFlags(checkoutCmd)
 		// 	checkoutCmd.StringVar(&OutputFolder, "out", "", "output folder")
