@@ -1,33 +1,29 @@
 package main
 
 import (
-	"encoding/json"
+	"bufio"
 	"flag"
 	"fmt"
 	"os"
 	"strconv"
 
-	"github.com/akbarnes/gover/src/options"
-	"github.com/akbarnes/gover/src/snapshots"
+	"github.com/akbarnes/gover"
 )
 
 func ReadFilters() []string {
-	filterPath := ".gover_ignore.json"
+	filterPath := ".gover_ignore"
 	var filters []string
-	f, err := os.Open(filterPath)
+	f, _ := os.Open(filterPath)
+	scanner := bufio.NewScanner(f)
 
-	if err != nil {
-		// panic(fmt.Sprintf("Error: Could not read snapshot file %s", snapshotPath))
-		return []string{}
+	for scanner.Scan() {
+		filters = append(filters, scanner.Text())
 	}
 
-	myDecoder := json.NewDecoder(f)
-
-	if err := myDecoder.Decode(&filters); err != nil {
-		panic(fmt.Sprintf("Error:could not decode filter file %s", filterPath))
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
 
-	f.Close()
 	return filters
 }
 
@@ -35,8 +31,8 @@ var Message string
 var OutputFolder string
 
 func AddOptionFlags(fs *flag.FlagSet) {
-	fs.BoolVar(&options.VerboseMode, "verbose", false, "verbose mode")
-	fs.BoolVar(&options.VerboseMode, "v", false, "verbose mode")
+	fs.BoolVar(&gover.VerboseMode, "verbose", false, "verbose mode")
+	fs.BoolVar(&gover.VerboseMode, "v", false, "verbose mode")
 }
 
 func main() {
@@ -63,16 +59,16 @@ func main() {
 			Message = commitCmd.Arg(0)
 		}
 
-		snapshots.CommitSnapshot(Message, filters)
+		gover.CommitSnapshot(Message, filters)
 	} else if cmd == "status" || cmd == "st" {
 		AddOptionFlags(statusCmd)
 		statusCmd.Parse(os.Args[2:])
 		filters := ReadFilters()
 
 		if statusCmd.NArg() >= 1 {
-			snapshots.DiffSnapshot(statusCmd.Arg(0), filters)
+			gover.DiffSnapshot(statusCmd.Arg(0), filters)
 		} else {
-			snapshots.DiffSnapshot("", filters)
+			gover.DiffSnapshot("", filters)
 		}
 	} else if cmd == "log" {
 		AddOptionFlags(logCmd)
@@ -80,9 +76,9 @@ func main() {
 
 		if logCmd.NArg() >= 1 {
 			snapshotNum, _ := strconv.Atoi(logCmd.Arg(0))
-			snapshots.LogSingleSnapshot(snapshotNum)
+			gover.LogSingleSnapshot(snapshotNum)
 		} else {
-			snapshots.LogAllSnapshots()
+			gover.LogAllSnapshots()
 		}
 	} else if cmd == "checkout" || cmd == "co" {
 		AddOptionFlags(checkoutCmd)
@@ -90,7 +86,7 @@ func main() {
 		checkoutCmd.StringVar(&OutputFolder, "o", "", "output folder")
 		checkoutCmd.Parse(os.Args[2:])
 		snapshotNum, _ := strconv.Atoi(checkoutCmd.Arg(0))
-		snapshots.CheckoutSnaphot(snapshotNum, OutputFolder)
+		gover.CheckoutSnaphot(snapshotNum, OutputFolder)
 	} else {
 		fmt.Println("Unknown subcommand")
 		os.Exit(1)

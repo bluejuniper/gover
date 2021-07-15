@@ -1,16 +1,14 @@
-package snapshots
+package gover
 
 import (
 	"fmt"
 	"path/filepath"
-
-	"github.com/akbarnes/gover/src/util"
 )
 
 func LogAllSnapshots() {
 	snapshotGlob := filepath.Join(".gover", "snapshots", "*.json")
 	snapshotPaths, err := filepath.Glob(snapshotGlob)
-	util.Check(err)
+	Check(err)
 
 	for i, snapshotPath := range snapshotPaths {
 		snap := ReadSnapshotFile(snapshotPath)
@@ -27,7 +25,7 @@ func LogAllSnapshots() {
 func LogSingleSnapshot(snapshotNum int) {
 	snapshotGlob := filepath.Join(".gover", "snapshots", "*.json")
 	snapshotPaths, err := filepath.Glob(snapshotGlob)
-	util.Check(err)
+	Check(err)
 
 	snapshotPath := snapshotPaths[snapshotNum-1]
 	snap := ReadSnapshotFile(snapshotPath)

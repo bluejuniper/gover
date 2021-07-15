@@ -1,12 +1,10 @@
-package snapshots
+package gover
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"encoding/json"
-	"github.com/akbarnes/gover/src/util"
-	"github.com/akbarnes/gover/src/options"
 )
 
 func (snap Snapshot) Write(snapshotPath string) {
@@ -21,13 +19,10 @@ func (snap Snapshot) Write(snapshotPath string) {
 	f.Close()
 }
 
-
-
-
 func ReadSnapshot(snapId string) Snapshot {
-	snapshotPath := filepath.Join(".gover", "snapshots", snapId + ".json")
+	snapshotPath := filepath.Join(".gover", "snapshots", snapId+".json")
 
-	if options.VerboseMode {
+	if VerboseMode {
 		fmt.Printf("Reading %s\n", snapshotPath)
 	}
 
@@ -48,7 +43,7 @@ func ReadSnapshotFile(snapshotPath string) Snapshot {
 
 	if err := myDecoder.Decode(&mySnapshot); err != nil {
 		fmt.Printf("Error:could not decode head file %s\n", snapshotPath)
-		util.Check(err)
+		Check(err)
 	}
 
 	f.Close()

@@ -1,4 +1,4 @@
-package snapshots
+package gover
 
 import (
 	"fmt"
@@ -6,10 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/akbarnes/gover/src/options"
-	"github.com/akbarnes/gover/src/util"
-	"github.com/bmatcuk/doublestar/v4"
 )
 
 func CommitSnapshot(message string, filters []string) {
@@ -23,44 +19,19 @@ func CommitSnapshot(message string, filters []string) {
 	snap.Message = message
 
 	// workingDirectory, err := os.Getwd()
-	// util.Check(err)
+	// Check(err)
 	workingDirectory := "."
 	head := ReadHead()
-
-	goverDir := filepath.Join(workingDirectory, ".gover", "**")
 
 	var VersionFile = func(fileName string, info os.FileInfo, err error) error {
 		fileName = strings.TrimSuffix(fileName, "\n")
 
-		if info.IsDir() {
+		if ExcludedFile(fileName, info, filters) {
 			return nil
-		}
-
-		matched, err := doublestar.PathMatch(goverDir, fileName)
-
-		if matched {
-			if options.VerboseMode {
-				fmt.Printf("Skipping file %s in .gover\n", fileName)
-			}
-
-			return nil
-		}
-
-		for _, pattern := range filters {
-			matched, err := doublestar.PathMatch(pattern, fileName)
-
-			util.Check(err)
-			if matched {
-				if options.VerboseMode {
-					fmt.Printf("Skipping file %s which matches with %s\n", fileName, pattern)
-				}
-
-				return nil
-			}
 		}
 
 		ext := filepath.Ext(fileName)
-		hash, hashErr := util.HashFile(fileName, util.NumChars)
+		hash, hashErr := HashFile(fileName, NumChars)
 
 		if hashErr != nil {
 			return hashErr
@@ -72,7 +43,7 @@ func CommitSnapshot(message string, filters []string) {
 		props, err := os.Stat(fileName)
 
 		if err != nil {
-			if options.VerboseMode {
+			if VerboseMode {
 				fmt.Printf("Skipping unreadable file %s\n", fileName)
 			}
 
@@ -88,13 +59,13 @@ func CommitSnapshot(message string, filters []string) {
 		os.MkdirAll(verFolder, 0777)
 
 		if headModTime, ok := head.ModTimes[fileName]; ok && modTime == headModTime {
-			if options.VerboseMode {
+			if VerboseMode {
 				fmt.Printf("Skipping %s\n", fileName)
 			}
 		} else {
-			util.CopyFile(fileName, verFile)
+			CopyFile(fileName, verFile)
 
-			if options.VerboseMode {
+			if VerboseMode {
 				fmt.Printf("%s -> %s\n", fileName, verFile)
 			} else {
 				fmt.Println(fileName)
