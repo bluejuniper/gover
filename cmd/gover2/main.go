@@ -13,7 +13,7 @@ import (
 )
 
 func ReadFilters() []string {
-	filterPath := ".gover2_ignore"
+	filterPath := ".gover_ignore"
 	var filters []string
 	f, _ := os.Open(filterPath)
 	scanner := bufio.NewScanner(f)
