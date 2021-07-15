@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 
 	"github.com/akbarnes/gover"
@@ -11,7 +12,7 @@ import (
 )
 
 func ReadFilters() []string {
-	filterPath := ".gover_ignore.json"
+	filterPath := ".gover2_ignore.json"
 	var filters []string
 	f, err := os.Open(filterPath)
 
@@ -62,9 +63,18 @@ func main() {
 			Message = commitCmd.Arg(0)
 		}
 
-		p, _ := chunker.RandomPolynomial()
+		// TODO: need to use fixed poly
+		rand.Seed(1)
+		// p, _ := chunker.RandomPolynomial()
+		const p chunker.Pol = 0x3abc9bff07d9e5
+
+		if gover.VerboseMode {
+			fmt.Printf("Random polynomial: ")
+			fmt.Println(p)
+		}
+
 		const packSize int64 = 10 * 1024 * 1024
-		gover.CommitSnapshot(Message, filters, p, 0, packSize)
+		gover.CommitSnapshot(Message, filters, p, packSize)
 		// } else if cmd == "status" || cmd == "st"
 		// 	AddOptionFlags(statusCmd)
 		// 	statusCmd.Parse(os.Args[2:])

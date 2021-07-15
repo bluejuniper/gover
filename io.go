@@ -1,13 +1,24 @@
 package gover
 
 import (
+	"archive/zip"
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
+
+	"github.com/restic/chunker"
 )
 
-func (snap Snapshot) Write(snapshotPath string) {
+func (snap Snapshot) Write(snapFilename string) {
+	snapFolder := filepath.Join(WorkingDirectory, ".gover2", "snapshots")
+	os.MkdirAll(snapFolder, 0777)
+	snapFile := filepath.Join(snapFolder, snapFilename+".json")
+	snap.WriteFile(snapFile)
+}
+
+func (snap Snapshot) WriteFile(snapshotPath string) {
 	f, err := os.Create(snapshotPath)
 
 	if err != nil {
@@ -98,4 +109,54 @@ func ReadHead() Snapshot {
 
 	snapshotPath := filepath.Join(".gover2", "snapshots", snapshotId+".json")
 	return ReadSnapshotFile(snapshotPath)
+}
+
+func CreatePackFile(packId string) (*os.File, error) {
+	goverDir := filepath.Join(WorkingDirectory, ".gover2")
+	packFolderPath := path.Join(goverDir, "packs", packId[0:2])
+	os.MkdirAll(packFolderPath, 0777)
+	packPath := path.Join(packFolderPath, packId+".zip")
+
+	if VerboseMode {
+		fmt.Printf("Creating pack: %s\n", packId[0:16])
+	}
+
+	// TODO: only create pack file if we need to save stuff - set to nil initially
+	packFile, err := os.Create(packPath)
+
+	if err != nil {
+		if VerboseMode {
+			fmt.Printf("Error creating pack file %s", packPath)
+		}
+
+		return nil, err
+	}
+
+	return packFile, nil
+}
+
+func WriteChunkToPack(zipWriter *zip.Writer, chunkId string, chunk chunker.Chunk) error {
+	var header zip.FileHeader
+	header.Name = chunkId
+	header.Method = CompressionLevel
+
+	writer, err := zipWriter.CreateHeader(&header)
+
+	if err != nil {
+		if VerboseMode {
+			fmt.Printf("Error creating zip header\n")
+		}
+
+		return err
+	}
+
+	if _, err := writer.Write(chunk.Data); err != nil {
+		if VerboseMode {
+			fmt.Printf("Error writing chunk %s to zip file\n", chunkId)
+		}
+
+		return err
+	}
+
+	return nil
 }
