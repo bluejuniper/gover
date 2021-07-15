@@ -1,19 +1,23 @@
 package gover
 
 import (
+	"archive/zip"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 )
 
 func CheckoutSnaphot(snapshotNum int, outputFolder string) {
+	goverDir := filepath.Join(WorkingDirectory, ".gover2")
+
 	if len(outputFolder) == 0 {
 		outputFolder = fmt.Sprintf("snapshot%04d", snapshotNum)
 	}
 
 	fmt.Printf("Checking out %s\n", snapshotNum)
 
-	snapshotGlob := filepath.Join(".gover", "snapshots", "*.json")
+	snapshotGlob := filepath.Join(goverDir, "snapshots", "*.json")
 	snapshotPaths, err := filepath.Glob(snapshotGlob)
 	Check(err)
 
@@ -23,7 +27,7 @@ func CheckoutSnaphot(snapshotNum int, outputFolder string) {
 
 	os.Mkdir(outputFolder, 0777)
 
-	for _, file := range snap.Files {
+	for file, _ := range snap.FileModTimes {
 		fileDir := filepath.Dir(file)
 		outDir := outputFolder
 
@@ -33,9 +37,20 @@ func CheckoutSnaphot(snapshotNum int, outputFolder string) {
 			os.MkdirAll(outDir, 0777)
 		}
 
-		outFile := filepath.Join(outputFolder, file)
-		storedFile := snap.StoredFiles[file]
-		fmt.Printf("Restoring %s to %s\n", storedFile, outFile)
-		CopyFile(storedFile, outFile)
+		outPath := filepath.Join(outputFolder, file)
+		outFile, err := os.Create(outPath)
+		Check(err)
+		defer outFile.Close()
+
+		for _, chunkId := range snap.FileChunkIds[file] {
+			packFolderPath := path.Join(goverDir, "packs", packId[0:2])
+			packPath := path.Join(packFolderPath, packId+".zip")
+			packFile, err := zip.OpenReader(packPath)
+			Check(err)
+			defer packFile.Close()
+
+		}
+
+		fmt.Printf("Restored %s to %s\n", file, outPath)
 	}
 }

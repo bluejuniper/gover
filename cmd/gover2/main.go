@@ -13,7 +13,7 @@ import (
 )
 
 func ReadFilters() []string {
-	filterPath := ".gover2_ignore.json"
+	filterPath := ".gover2_ignore"
 	var filters []string
 	f, _ := os.Open(filterPath)
 	scanner := bufio.NewScanner(f)
@@ -71,12 +71,18 @@ func main() {
 			fmt.Println(p)
 		}
 
-		const packSize int64 = 10 * 1024 * 1024
+		const packSize int64 = 100 * 1024 * 1024
 		gover.CommitSnapshot(Message, filters, p, packSize)
 	} else if cmd == "status" || cmd == "st" {
 		AddOptionFlags(statusCmd)
 		statusCmd.Parse(os.Args[2:])
 		filters := ReadFilters()
+
+		// for _, f := range filters {
+		// 	fmt.Printf("[%s]\n", f)
+		// }
+
+		// panic("noooo")
 
 		if statusCmd.NArg() >= 1 {
 			gover.DiffSnapshot(statusCmd.Arg(0), filters)
