@@ -19,6 +19,7 @@ func Check(e error) {
 	}
 }
 
+// TODO: merge these two togther to save one file read
 func HashFile(FileName string, NumChars int) (string, error) {
 	var data []byte
 	var err error
