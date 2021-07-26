@@ -50,7 +50,6 @@ func CommitSnapshot(message string, filters []string) {
 
 			verFile = head.StoredFiles[fileName]
 		} else {
-			ext := filepath.Ext(fileName)
 			hash, hashErr := HashFile(fileName, NumChars)
 
 			if hashErr != nil {
@@ -58,7 +57,7 @@ func CommitSnapshot(message string, filters []string) {
 			}
 
 			verFolder := filepath.Join(".gover", "data", hash[0:2])
-			verFile = filepath.Join(verFolder, hash+ext)
+			verFile = filepath.Join(verFolder, hash)
 			os.MkdirAll(verFolder, 0777)
 
 			if CopyFile(fileName, verFile) != nil {
