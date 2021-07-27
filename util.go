@@ -62,8 +62,8 @@ func CopyFile(src, dst string) error {
 }
 
 func ExcludedFile(fileName string, info os.FileInfo, filters []string) bool {
-	// goverDir := filepath.Join(WorkingDirectory, ".gover2")
-	goverDir := ".gover2"
+	// goverDir := filepath.Join(WorkingDirectory, ".gover")
+	goverDir := ".gover"
 	goverPattern := filepath.Join(goverDir, "**")
 
 	if info.IsDir() {
@@ -78,7 +78,7 @@ func ExcludedFile(fileName string, info os.FileInfo, filters []string) bool {
 
 	if matched {
 		if VerboseMode {
-			fmt.Printf("Skipping file %s in .gover2\n", fileName)
+			fmt.Printf("Skipping file %s in .gover\n", fileName)
 		}
 
 		return true
