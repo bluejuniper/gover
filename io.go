@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -156,6 +157,55 @@ func WriteChunkToPack(zipWriter *zip.Writer, chunkId string, chunk chunker.Chunk
 		}
 
 		return err
+	}
+
+	return nil
+}
+
+func ExtractChunkFromPack(outFile *os.File, chunkId string, packId string) error {
+	goverDir := filepath.Join(WorkingDirectory, ".gover2")
+	packFolderPath := path.Join(goverDir, "packs", packId[0:2])
+	packPath := path.Join(packFolderPath, packId+".zip")
+	packFile, err := zip.OpenReader(packPath)
+
+	if err != nil {
+		if VerboseMode {
+			fmt.Printf("Error extracting pack %s[%s]\n", packId, chunkId)
+		}
+		return err
+	}
+
+	defer packFile.Close()
+	return ExtractChunkFromZipFile(outFile, packFile, chunkId)
+}
+
+func ExtractChunkFromZipFile(outFile *os.File, packFile *zip.ReadCloser, chunkId string) error {
+	for _, f := range packFile.File {
+
+		if f.Name == chunkId {
+			// fmt.Printf("Contents of %s:\n", f.Name)
+			chunkFile, err := f.Open()
+
+			if err != nil {
+				if VerboseMode {
+					fmt.Printf("Error opening chunk %s\n", chunkId)
+				}
+
+				return err
+			}
+
+			_, err = io.Copy(outFile, chunkFile)
+
+			if err != nil {
+				if VerboseMode {
+					fmt.Printf("Error reading chunk %s\n", chunkId)
+				}
+
+				return err
+			}
+
+			chunkFile.Close()
+		}
 	}
 
 	return nil

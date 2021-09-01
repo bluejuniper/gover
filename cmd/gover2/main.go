@@ -41,7 +41,7 @@ func main() {
 	commitCmd := flag.NewFlagSet("commit", flag.ExitOnError)
 	statusCmd := flag.NewFlagSet("status", flag.ExitOnError)
 	logCmd := flag.NewFlagSet("log", flag.ExitOnError)
-	// checkoutCmd := flag.NewFlagSet("checkout", flag.ExitOnError)
+	checkoutCmd := flag.NewFlagSet("checkout", flag.ExitOnError)
 
 	flag.Parse()
 
@@ -99,13 +99,13 @@ func main() {
 		} else {
 			gover.LogAllSnapshots()
 		}
-		// } else if cmd == "checkout" || cmd == "co" {
-		// 	AddOptionFlags(checkoutCmd)
-		// 	checkoutCmd.StringVar(&OutputFolder, "out", "", "output folder")
-		// 	checkoutCmd.StringVar(&OutputFolder, "o", "", "output folder")
-		// 	checkoutCmd.Parse(os.Args[2:])
-		// 	snapshotNum, _ := strconv.Atoi(checkoutCmd.Arg(0))
-		// 	gover.CheckoutSnaphot(snapshotNum, OutputFolder)
+	} else if cmd == "checkout" || cmd == "co" {
+		AddOptionFlags(checkoutCmd)
+		checkoutCmd.StringVar(&OutputFolder, "out", "", "output folder")
+		checkoutCmd.StringVar(&OutputFolder, "o", "", "output folder")
+		checkoutCmd.Parse(os.Args[2:])
+		snapshotNum, _ := strconv.Atoi(checkoutCmd.Arg(0))
+		gover.CheckoutSnaphot(snapshotNum, OutputFolder)
 	} else {
 		fmt.Println("Unknown subcommand")
 		os.Exit(1)

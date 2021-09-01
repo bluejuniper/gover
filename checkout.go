@@ -1,10 +1,8 @@
 package gover
 
 import (
-	"archive/zip"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 )
 
@@ -12,7 +10,7 @@ func CheckoutSnaphot(snapshotNum int, outputFolder string) {
 	goverDir := filepath.Join(WorkingDirectory, ".gover2")
 
 	if len(outputFolder) == 0 {
-		outputFolder = fmt.Sprintf("snapshot%04d", snapshotNum)
+		outputFolder = fmt.Sprintf("snapshot%03d", snapshotNum)
 	}
 
 	fmt.Printf("Checking out %s\n", snapshotNum)
@@ -39,16 +37,18 @@ func CheckoutSnaphot(snapshotNum int, outputFolder string) {
 
 		outPath := filepath.Join(outputFolder, file)
 		outFile, err := os.Create(outPath)
-		Check(err)
+
+		if err != nil {
+			// fmt.Fprintln(os.Stderr, "Error creating %s, skipping\n", outPath)
+			fmt.Printf("Error creating %s, skipping\n", outPath)
+			continue
+		}
+
 		defer outFile.Close()
 
 		for _, chunkId := range snap.FileChunkIds[file] {
-			packFolderPath := path.Join(goverDir, "packs", packId[0:2])
-			packPath := path.Join(packFolderPath, packId+".zip")
-			packFile, err := zip.OpenReader(packPath)
-			Check(err)
-			defer packFile.Close()
-
+			packId := snap.ChunkPackIds[chunkId]
+			ExtractChunkFromPack(outFile, chunkId, packId)
 		}
 
 		fmt.Printf("Restored %s to %s\n", file, outPath)
